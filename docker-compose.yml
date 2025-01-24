@@ -1,0 +1,55 @@
+name: lara-php
+services:
+  dev:
+    container_name: php_dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      PHP_VERSION: 8.1
+    volumes:
+      - ./public:/var/www/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+
+  db:
+    container_name: postgres
+    environment:
+      POSTGRES_DB: lara_php
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_USER: root
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  nginx:
+    container_name: nginx
+    depends_on:
+      - dev
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./public:/var/www/html
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_MEMORY_LIMIT: 256M
+      PMA_PORT: "5432"
+      PMA_UPLOAD_LIMIT: 64M
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:
